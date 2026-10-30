@@ -69,13 +69,29 @@ class XPathRuleStrategy {
         includeCookies: true,
       );
     }
+    // The form body carries the search fields, so the URL must not keep them as
+    // well. `Uri.replace(query: null)` is a no-op for the query part (null means
+    // "inherit from this URI"), which would send every field twice.
     return PreparedRuleRequest(
       method: 'POST',
-      url: uri.replace(query: null).toString(),
+      url: _urlWithoutQuery(uri),
       bodyType: 'form',
       body: uri.queryParameters,
       includeCookies: true,
     );
+  }
+
+  /// Rebuilds [uri] without its query, keeping scheme, authority and path.
+  ///
+  /// `Uri.replace(query: '')` would leave a dangling `?` behind.
+  static String _urlWithoutQuery(Uri uri) {
+    return Uri(
+      scheme: uri.scheme,
+      userInfo: uri.userInfo.isEmpty ? null : uri.userInfo,
+      host: uri.host,
+      port: uri.hasPort ? uri.port : null,
+      path: uri.path,
+    ).toString();
   }
 
   PreparedRuleRequest prepareChapterRequest(
